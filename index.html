@@ -112,6 +112,7 @@ const db = firebase.firestore();
 let joias = [];
 let filtroAtual = "disponiveis";
 let adminLogado = false;
+let dadosIniciaisCarregados = false; // 🔧 CONTROLE PARA EVITAR DUPLICAÇÃO
 const SENHA_ADMIN = "verdeleve2024";
 
 // Carregar dados do Firebase
@@ -125,7 +126,9 @@ async function carregarJoias() {
             joias.push({ id: doc.id, ...doc.data() });
         });
         
-        if(joias.length === 0) {
+        // 🔧 Só carrega dados iniciais se o banco estiver vazio E ainda não tiver carregado
+        if(joias.length === 0 && !dadosIniciaisCarregados) {
+            dadosIniciaisCarregados = true;
             await carregarDadosIniciais();
         } else {
             renderizar();
@@ -157,8 +160,12 @@ async function carregarDadosIniciais() {
         { numero: "17", categoria: "brinco", nome: "Brinco de Madeira", preco: 30, status: "disponivel", img: "joia17.jpeg" }
     ];
     
-    for(let joia of dadosIniciais) {
-        await db.collection("joias").add(joia);
+    // 🔧 Verifica novamente se o banco está vazio antes de adicionar
+    const checkSnapshot = await db.collection("joias").limit(1).get();
+    if(checkSnapshot.empty) {
+        for(let joia of dadosIniciais) {
+            await db.collection("joias").add(joia);
+        }
     }
     carregarJoias();
 }
