@@ -1,965 +1,336 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Verdeleve · Jóias Sustentáveis</title>
-
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet" />
-
-    <!-- Firebase SDK -->
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js">
-    </script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js">
-    </script>
-
-    <style>
-        /* ========== RESET & BASE ========== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Lato', sans-serif;
-            background: #f6f2eb;
-            color: #2c2b28;
-            line-height: 1.6;
-            min-height: 100vh;
-        }
-
-        /* ========== HEADER ========== */
-        header {
-            background: linear-gradient(135deg, #2c3e2f 0%, #1e2b20 100%);
-            padding: 32px 20px;
-            text-align: center;
-            border-bottom: 3px solid #b8956a;
-            position: relative;
-        }
-
-        header::after {
-            content: '';
-            position: absolute;
-            bottom: -3px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, transparent, #d4af87, transparent);
-        }
-
-        .logo {
-            max-width: 320px;
-            width: 80%;
-            display: block;
-            margin: 0 auto;
-            filter: drop-shadow(0 2px 12px rgba(0, 0, 0, 0.3));
-        }
-
-        /* ========== SUBTÍTULO ========== */
-        .tagline {
-            text-align: center;
-            font-family: 'Playfair Display', serif;
-            font-style: italic;
-            color: #5a4d3e;
-            font-size: 1.1rem;
-            letter-spacing: 1px;
-            padding: 16px 20px 6px;
-            background: #f6f2eb;
-        }
-
-        .tagline span {
-            background: #e8dfd4;
-            padding: 4px 24px;
-            border-radius: 30px;
-            display: inline-block;
-        }
-
-        /* ========== TABS ========== */
-        .tabs {
-            display: flex;
-            gap: 8px;
-            padding: 16px 20px;
-            background: #ffffff;
-            flex-wrap: wrap;
-            justify-content: center;
-            border-bottom: 1px solid #e4ddd4;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
-        }
-
-        .tab-btn {
-            padding: 10px 22px;
-            border: none;
-            background: transparent;
-            cursor: pointer;
-            border-radius: 30px;
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #5a4d3e;
-            transition: all 0.25s ease;
-            letter-spacing: 0.3px;
-            font-family: 'Lato', sans-serif;
-        }
-
-        .tab-btn:hover {
-            background: #ede7df;
-            color: #2c3e2f;
-            transform: translateY(-1px);
-        }
-
-        .tab-btn.active {
-            background: #2c3e2f;
-            color: #fff;
-            box-shadow: 0 4px 12px rgba(44, 62, 47, 0.25);
-        }
-
-        /* ========== GRID DE PRODUTOS ========== */
-        .products {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 28px;
-            padding: 32px 24px;
-            max-width: 1280px;
-            margin: 0 auto;
-        }
-
-        /* ========== CARD ========== */
-        .card {
-            background: #ffffff;
-            border-radius: 16px;
-            overflow: hidden;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
-            transition: all 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            position: relative;
-            border: 1px solid rgba(232, 223, 212, 0.4);
-            display: flex;
-            flex-direction: column;
-        }
-
-        .card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 16px 48px rgba(44, 62, 47, 0.10);
-            border-color: #d4c5b6;
-        }
-
-        /* Selo "Vendido" no canto */
-        .card.vendido-card::before {
-            content: 'SOLD OUT';
-            position: absolute;
-            top: 16px;
-            right: 16px;
-            background: #8a7a6a;
-            color: #fff;
-            font-size: 0.65rem;
-            font-weight: 700;
-            letter-spacing: 1.5px;
-            padding: 4px 14px;
-            border-radius: 30px;
-            z-index: 2;
-            opacity: 0.85;
-            backdrop-filter: blur(2px);
-        }
-
-        .card.vendido-card {
-            opacity: 0.75;
-            filter: grayscale(0.2);
-        }
-
-        .card img {
-            width: 100%;
-            height: 260px;
-            object-fit: contain;
-            padding: 16px;
-            background: #faf8f5;
-            cursor: zoom-in;
-            transition: transform 0.6s ease;
-        }
-
-        .card:hover img {
-            transform: scale(1.02);
-        }
-
-        /* Número da peça */
-        .card .numero-badge {
-            position: absolute;
-            bottom: 12px;
-            left: 12px;
-            background: rgba(44, 62, 47, 0.85);
-            backdrop-filter: blur(4px);
-            color: #fff;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 4px 14px;
-            border-radius: 30px;
-            letter-spacing: 0.5px;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-        }
-
-        /* ========== INFO DO CARD ========== */
-        .info {
-            padding: 16px 20px 20px;
-            text-align: center;
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-        }
-
-        .status {
-            display: inline-block;
-            padding: 4px 16px;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            letter-spacing: 0.8px;
-            text-transform: uppercase;
-            align-self: center;
-        }
-
-        .disponivel {
-            background: #e3eee6;
-            color: #1e4a3b;
-        }
-
-        .reservado {
-            background: #f5ede0;
-            color: #8a6e4b;
-        }
-
-        .vendido {
-            background: #e8e0da;
-            color: #6b5d52;
-        }
-
-        .product-name {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2c2b28;
-            margin: 4px 0 2px;
-            line-height: 1.3;
-        }
-
-        .price {
-            font-weight: 700;
-            font-size: 1.3rem;
-            color: #2c3e2f;
-            letter-spacing: 0.5px;
-            margin: 2px 0;
-        }
-
-        .price::before {
-            content: 'R$ ';
-            font-weight: 400;
-            font-size: 0.9rem;
-            color: #6b7d6e;
-        }
-
-        .btn-whats {
-            background: #25D366;
-            color: #fff;
-            border: none;
-            padding: 10px 18px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 0.85rem;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: all 0.25s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            box-shadow: 0 4px 12px rgba(37, 211, 102, 0.25);
-            font-family: 'Lato', sans-serif;
-        }
-
-        .btn-whats:hover {
-            background: #1da85c;
-            transform: scale(1.02);
-            box-shadow: 0 6px 20px rgba(37, 211, 102, 0.35);
-        }
-
-        .sold-label {
-            font-size: 0.8rem;
-            color: #8a7a6a;
-            margin-top: 8px;
-            letter-spacing: 0.5px;
-        }
-
-        /* ========== BOTÕES ADMIN ========== */
-        .admin-buttons {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            margin-top: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn-vender,
-        .btn-restaurar {
-            padding: 6px 14px;
-            border: none;
-            border-radius: 30px;
-            font-size: 0.7rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-            font-family: 'Lato', sans-serif;
-        }
-
-        .btn-vender {
-            background: #d4a08a;
-            color: #fff;
-        }
-
-        .btn-vender:hover {
-            background: #c08a72;
-            transform: scale(1.04);
-        }
-
-        .btn-restaurar {
-            background: #d4c5b6;
-            color: #4a3d32;
-        }
-
-        .btn-restaurar:hover {
-            background: #c4b5a6;
-            transform: scale(1.04);
-        }
-
-        /* ========== BOTÃO ADMIN (flutuante) ========== */
-        .admin-btn {
-            position: fixed;
-            bottom: 28px;
-            right: 28px;
-            background: #2c3e2f;
-            color: #fff;
-            border: none;
-            padding: 14px 22px;
-            border-radius: 50px;
-            cursor: pointer;
-            z-index: 100;
-            font-weight: 700;
-            font-size: 0.9rem;
-            box-shadow: 0 8px 28px rgba(44, 62, 47, 0.30);
-            transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-family: 'Lato', sans-serif;
-            letter-spacing: 0.5px;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-
-        .admin-btn:hover {
-            transform: translateY(-3px) scale(1.02);
-            box-shadow: 0 12px 40px rgba(44, 62, 47, 0.40);
-            background: #1e2b20;
-        }
-
-        /* ========== PAINEL ADMIN ========== */
-        .admin-panel {
-            display: none;
-            background: #ffffff;
-            padding: 28px 30px;
-            margin: 16px 20px;
-            border-radius: 20px;
-            border: 1px solid #e4ddd4;
-            box-shadow: 0 8px 40px rgba(0, 0, 0, 0.06);
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .admin-panel.show {
-            display: block;
-        }
-
-        .admin-panel h3 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.6rem;
-            color: #2c3e2f;
-            margin-bottom: 16px;
-        }
-
-        .admin-panel h4 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            color: #4a3d32;
-            margin: 16px 0 12px;
-        }
-
-        .admin-panel input,
-        .admin-panel select {
-            padding: 10px 14px;
-            border: 1px solid #ddd6cc;
-            border-radius: 10px;
-            width: 100%;
-            font-family: 'Lato', sans-serif;
-            font-size: 0.95rem;
-            background: #fcfaf7;
-            transition: 0.2s;
-        }
-
-        .admin-panel input:focus,
-        .admin-panel select:focus {
-            border-color: #2c3e2f;
-            outline: none;
-            box-shadow: 0 0 0 3px rgba(44, 62, 47, 0.10);
-        }
-
-        .form-row {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-        }
-
-        .form-group {
-            flex: 1;
-            min-width: 150px;
-        }
-
-        .btn-admin {
-            background: #2c3e2f;
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: 700;
-            transition: 0.25s ease;
-            font-family: 'Lato', sans-serif;
-            font-size: 0.9rem;
-            width: 100%;
-        }
-
-        .btn-admin:hover {
-            background: #1e2b20;
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(44, 62, 47, 0.25);
-        }
-
-        .btn-sair-admin {
-            background: #d4a08a;
-            color: #fff;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: 700;
-            margin-top: 16px;
-            transition: 0.25s ease;
-            font-family: 'Lato', sans-serif;
-        }
-
-        .btn-sair-admin:hover {
-            background: #c08a72;
-        }
-
-        .resumo-box {
-            background: #f6f2eb;
-            padding: 14px 18px;
-            border-radius: 12px;
-            font-size: 0.95rem;
-            color: #3d3a35;
-            border: 1px solid #e4ddd4;
-            margin: 12px 0 8px;
-        }
-
-        .resumo-box strong {
-            color: #2c3e2f;
-        }
-
-        /* ========== ZOOM ========== */
-        #zoom {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.88);
-            backdrop-filter: blur(8px);
-            justify-content: center;
-            align-items: center;
-            z-index: 999;
-            cursor: pointer;
-        }
-
-        #zoom img {
-            max-width: 92%;
-            max-height: 92%;
-            border-radius: 16px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6);
-            background: #fff;
-            padding: 8px;
-        }
-
-        /* ========== LOADING ========== */
-        .loading {
-            text-align: center;
-            padding: 60px 20px;
-            color: #7a6d5e;
-            font-family: 'Playfair Display', serif;
-            font-size: 1.2rem;
-            letter-spacing: 1px;
-        }
-
-        .loading::before {
-            content: '✦';
-            display: block;
-            font-size: 2.4rem;
-            margin-bottom: 12px;
-            color: #b8956a;
-        }
-
-        /* ========== FOOTER ========== */
-        footer {
-            text-align: center;
-            padding: 28px 20px;
-            color: #7a6d5e;
-            font-size: 0.85rem;
-            background: #f6f2eb;
-            border-top: 1px solid #e4ddd4;
-            letter-spacing: 0.5px;
-        }
-
-        footer .whatsapp-link {
-            color: #2c3e2f;
-            font-weight: 700;
-            text-decoration: none;
-        }
-
-        footer .whatsapp-link:hover {
-            text-decoration: underline;
-        }
-
-        /* ========== RESPONSIVO ========== */
-        @media (max-width: 600px) {
-            .products {
-                grid-template-columns: 1fr 1fr;
-                gap: 14px;
-                padding: 16px 12px;
-            }
-
-            .card img {
-                height: 180px;
-                padding: 10px;
-            }
-
-            .product-name {
-                font-size: 0.95rem;
-            }
-
-            .price {
-                font-size: 1.1rem;
-            }
-
-            .admin-panel {
-                padding: 18px;
-                margin: 10px;
-            }
-
-            .admin-btn {
-                bottom: 16px;
-                right: 16px;
-                padding: 10px 16px;
-                font-size: 0.8rem;
-            }
-
-            .tagline {
-                font-size: 0.9rem;
-                padding: 12px 12px 4px;
-            }
-
-            .tabs {
-                gap: 4px;
-                padding: 10px 8px;
-            }
-
-            .tab-btn {
-                padding: 6px 12px;
-                font-size: 0.75rem;
-            }
-        }
-
-        @media (max-width: 420px) {
-            .products {
-                grid-template-columns: 1fr;
-                max-width: 320px;
-                margin: 0 auto;
-            }
-        }
-
-        /* ========== SCROLL SUAVE ========== */
-        html {
-            scroll-behavior: smooth;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verdeleve - Jóias Sustentáveis</title>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+
+<style>
+body { font-family: Arial, sans-serif; background: #f6f4f1; margin: 0; }
+header { background: #2f3e34; padding: 20px; text-align: center; }
+.logo { width: 300px; max-width: 80%; }
+.tabs { display: flex; gap: 10px; padding: 15px; background: white; flex-wrap: wrap; justify-content: center; }
+.tab-btn { padding: 10px 20px; border: none; background: #eaeaea; cursor: pointer; border-radius: 25px; font-weight: bold; }
+.tab-btn.active { background: #2f3e34; color: white; }
+.products { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 15px; }
+@media (max-width: 600px) { .products { grid-template-columns: 1fr; } }
+.card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); position: relative; padding: 15px; text-align: center; }
+.card img { width: 100%; height: 200px; object-fit: contain; cursor: pointer; background: #f5f5f5; }
+.price { color: #3e5c4d; font-weight: bold; font-size: 18px; }
+.status { display: inline-block; padding: 4px 10px; border-radius: 4px; font-size: 11px; margin-bottom: 8px; }
+.disponivel { background: #d4edda; color: #155724; }
+.reservado { background: #fff3cd; color: #856404; }
+.vendido { background: #6c757d; color: white; }
+.btn-whats { background: #25d366; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; margin-top: 8px; }
+.admin-btn { position: fixed; bottom: 20px; right: 20px; background: #2f3e34; color: white; border: none; padding: 12px 20px; border-radius: 30px; cursor: pointer; z-index: 100; font-weight: bold; }
+.admin-panel { display: none; background: white; padding: 20px; margin: 10px; border-radius: 12px; border: 2px solid #2f3e34; }
+.admin-panel.show { display: block; }
+.admin-panel input, .admin-panel select { padding: 8px; margin: 5px 0; border: 1px solid #ddd; border-radius: 6px; width: 100%; }
+.form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+.form-group { flex: 1; }
+.btn-admin { background: #2f3e34; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; }
+.btn-vender { background: #dc3545; color: white; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+.btn-restaurar { background: #ffc107; border: none; padding: 4px 10px; border-radius: 4px; cursor: pointer; margin-top: 5px; }
+.loading { text-align: center; padding: 50px; color: #666; }
+footer { text-align: center; padding: 20px; color: #666; }
+#zoom { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.9); justify-content: center; align-items: center; z-index: 999; }
+#zoom img { max-width: 90%; max-height: 90%; border-radius: 8px; }
+</style>
 </head>
-
 <body>
 
-    <!-- ==================== HEADER ==================== -->
-    <header>
-        <img src="logo.png" class="logo" alt="Verdeleve" onerror="this.src='https://placehold.co/400x120/2c3e2f/f6f2eb?text=Verdeleve'" />
-    </header>
+<header>
+    <img src="logo.png" class="logo" alt="Verdeleve" onerror="this.src='https://placehold.co/400x100?text=Verdeleve'">
+</header>
 
-    <div class="tagline">
-        <span> ✦  Jóias feitas à mão com alma  ✦ </span>
+<div class="tabs">
+    <button class="tab-btn active" onclick="filtrar('disponiveis', this)">✨ Disponíveis</button>
+    <button class="tab-btn" onclick="filtrar('vendidas', this)">💔 Peças já vendidas</button>
+    <button class="tab-btn" onclick="filtrar('brinco', this)">Brincos</button>
+    <button class="tab-btn" onclick="filtrar('colar', this)">Colares</button>
+    <button class="tab-btn" onclick="filtrar('bracelete', this)">Braceletes</button>
+</div>
+
+<div class="products" id="products">
+    <div class="loading">🔄 Carregando suas jóias...</div>
+</div>
+
+<footer>📲 WhatsApp: (11) 96342-9803</footer>
+
+<div id="zoom" onclick="fecharZoom()"><img id="zoomImg"></div>
+
+<button class="admin-btn" id="btnAdmin">🔒 Admin</button>
+
+<div class="admin-panel" id="adminPanel">
+    <h3>👑 Painel Administrador</h3>
+    <div id="loginBox">
+        <input type="password" id="senha" placeholder="Digite a senha">
+        <button onclick="logar()">Entrar</button>
     </div>
-
-    <!-- ==================== TABS ==================== -->
-    <div class="tabs">
-        <button class="tab-btn active" onclick="filtrar('disponiveis', this)">Disponíveis</button>
-        <button class="tab-btn" onclick="filtrar('vendidas', this)">Já vendidas</button>
-        <button class="tab-btn" onclick="filtrar('brinco', this)">Brincos</button>
-        <button class="tab-btn" onclick="filtrar('colar', this)">Colares</button>
-        <button class="tab-btn" onclick="filtrar('bracelete', this)">Braceletes</button>
-    </div>
-
-    <!-- ==================== PRODUTOS ==================== -->
-    <div class="products" id="products">
-        <div class="loading">Carregando suas jóias...</div>
-    </div>
-
-    <!-- ==================== FOOTER ==================== -->
-    <footer>
-        <a href="https://wa.me/5511963429803" target="_blank" class="whatsapp-link">📲 (11) 96342-9803</a>
-        &nbsp;·&nbsp; Verdeleve &nbsp;·&nbsp; ✦
-    </footer>
-
-    <!-- ==================== ZOOM ==================== -->
-    <div id="zoom" onclick="fecharZoom()">
-        <img id="zoomImg" alt="Ampliação" />
-    </div>
-
-    <!-- ==================== BOTÃO ADMIN ==================== -->
-    <button class="admin-btn" id="btnAdmin">✦ Admin</button>
-
-    <!-- ==================== PAINEL ADMIN ==================== -->
-    <div class="admin-panel" id="adminPanel">
-        <h3>✦ Painel do Administrador</h3>
-
-        <div id="loginBox">
-            <input type="password" id="senha" placeholder="Digite a senha" />
-            <button class="btn-admin" onclick="logar()" style="margin-top:8px;">Entrar</button>
-        </div>
-
-        <div id="adminBox" style="display:none;">
-            <h4>➕ Adicionar nova peça</h4>
-            <div class="form-row">
-                <div class="form-group">
-                    <input type="text" id="nome" placeholder="Nome da peça" />
-                </div>
-                <div class="form-group">
-                    <select id="categoria">
-                        <option value="colar">Colar</option>
-                        <option value="brinco">Brinco</option>
-                        <option value="bracelete">Bracelete</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <input type="number" id="preco" placeholder="Preço (R$)" />
-                </div>
-                <div class="form-group">
-                    <input type="text" id="imagem" placeholder="Nome da imagem (ex: joia18.jpg)" />
-                </div>
-                <div class="form-group">
-                    <button class="btn-admin" onclick="adicionarPeca()">➕ Adicionar</button>
-                </div>
+    <div id="adminBox" style="display:none">
+        <h4>➕ Adicionar nova peça</h4>
+        <div class="form-row">
+            <div class="form-group"><input type="text" id="nome" placeholder="Nome da peça"></div>
+            <div class="form-group">
+                <select id="categoria">
+                    <option value="colar">Colar</option>
+                    <option value="brinco">Brinco</option>
+                    <option value="bracelete">Bracelete</option>
+                </select>
             </div>
-
-            <div class="resumo-box" id="resumo">Carregando...</div>
-
-            <button class="btn-sair-admin" onclick="sairAdmin()">🚪 Sair do modo admin</button>
+            <div class="form-group"><input type="number" id="preco" placeholder="Preço R$"></div>
+            <div class="form-group"><input type="text" id="imagem" placeholder="Nome da imagem (ex: joia18.jpg)"></div>
+            <div class="form-group"><button class="btn-admin" onclick="adicionarPeca()">➕ Adicionar</button></div>
         </div>
+        <div id="resumo" style="background:#f0f2f0;padding:10px;border-radius:8px;margin-top:10px"></div>
+        <button onclick="sairAdmin()" style="background:#dc3545;color:white;border:none;padding:8px 16px;margin-top:10px;border-radius:6px">🚪 Sair do modo admin</button>
     </div>
+</div>
 
-    <!-- ==================== SCRIPTS ==================== -->
-    <script>
-        // ==================== FIREBASE CONFIG ====================
-        const firebaseConfig = {
-            apiKey: "AIzaSyBZskvOV8zIpMRZqHJn0RnYN_tPeTeQUJ4",
-            authDomain: "verdeleve-joias-e3272.firebaseapp.com",
-            projectId: "verdeleve-joias-e3272",
-            storageBucket: "verdeleve-joias-e3272.firebasestorage.app",
-            messagingSenderId: "255126926087",
-            appId: "1:255126926087:web:bd25bb64a03a95066f8ba2"
-        };
+<script>
+// ==================== SUAS CONFIGURAÇÕES REAIS DO FIREBASE ====================
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+const firebaseConfig = {
+    apiKey: "AIzaSyBZskvOV8zIpMRZqHJn0RnYN_tPeTeQUJ4",
+    authDomain: "verdeleve-joias-e3272.firebaseapp.com",
+    projectId: "verdeleve-joias-e3272",
+    storageBucket: "verdeleve-joias-e3272.firebasestorage.app",
+    messagingSenderId: "255126926087",
+    appId: "1:255126926087:web:bd25bb64a03a95066f8ba2"
+};
 
-        // ==================== VARIÁVEIS ====================
-        let joias = [];
-        let filtroAtual = "disponiveis";
-        let adminLogado = false;
-        let dadosIniciaisCarregados = false;
-        const SENHA_ADMIN = "verdeleve2024";
+// ==================== NÃO MEXA DAQUI PARA BAIXO ====================
 
-        // ==================== CARREGAR DADOS ====================
-        async function carregarJoias() {
-            document.getElementById("products").innerHTML = '<div class="loading">Carregando suas jóias...</div>';
+// Inicializar Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-            try {
-                const snapshot = await db.collection("joias").orderBy("numero").get();
-                joias = [];
-                snapshot.forEach(doc => {
-                    joias.push({ id: doc.id, ...doc.data() });
-                });
+let joias = [];
+let filtroAtual = "disponiveis";
+let adminLogado = false;
+let dadosIniciaisCarregados = false; // 🔧 CONTROLE PARA EVITAR DUPLICAÇÃO
+const SENHA_ADMIN = "verdeleve2024";
 
-                if (joias.length === 0 && !dadosIniciaisCarregados) {
-                    dadosIniciaisCarregados = true;
-                    await carregarDadosIniciais();
-                } else {
-                    renderizar();
-                    if (adminLogado) atualizarResumoAdmin();
-                }
-            } catch (error) {
-                console.error("Erro:", error);
-                document.getElementById("products").innerHTML =
-                    '<div class="loading">❌ Erro ao carregar. Recarregue a página.</div>';
-            }
-        }
-
-        // ==================== DADOS INICIAIS ====================
-        async function carregarDadosIniciais() {
-            const dadosIniciais = [
-                { numero: "1", categoria: "colar", nome: "Colar marchetaria de Madeira", preco: 50, status: "disponivel",
-                    img: "joia1.jpeg" },
-                { numero: "2", categoria: "colar", nome: "Colar de Madeira", preco: 45, status: "reservado",
-                    img: "joia2.jpeg" },
-                { numero: "3", categoria: "colar", nome: "Colar de Madeira", preco: 45, status: "reservado",
-                    img: "joia3.jpeg" },
-                { numero: "4", categoria: "colar", nome: "Colar de Madeira", preco: 55, status: "disponivel",
-                    img: "joia4.jpeg" },
-                { numero: "5", categoria: "colar", nome: "Colar de Madeira", preco: 50, status: "disponivel",
-                    img: "joia5.jpeg" },
-                { numero: "6", categoria: "colar", nome: "Colar de Madeira", preco: 40, status: "disponivel",
-                    img: "joia6.jpeg" },
-                { numero: "7", categoria: "brinco", nome: "Brinco de Madeira", preco: 50, status: "reservado",
-                    img: "joia7.jpeg" },
-                { numero: "8", categoria: "colar", nome: "Colar de Madeira", preco: 45, status: "disponivel",
-                    img: "joia8.jpeg" },
-                { numero: "10", categoria: "bracelete", nome: "Bracelete de Madeira", preco: 55, status: "reservado",
-                    img: "joia10.jpg" },
-                { numero: "11", categoria: "colar", nome: "Colar de Madeira", preco: 40, status: "disponivel",
-                    img: "joia11.jpg" },
-                { numero: "13", categoria: "colar", nome: "Colar de Madeira", preco: 40, status: "reservado",
-                    img: "joia13.jpg" },
-                { numero: "14", categoria: "colar", nome: "Colar de Madeira", preco: 35, status: "disponivel",
-                    img: "joia14.jpg" },
-                { numero: "15", categoria: "colar", nome: "Colar de Madeira", preco: 50, status: "disponivel",
-                    img: "joia15.jpeg" },
-                { numero: "16", categoria: "brinco", nome: "Brinco de Madeira", preco: 30, status: "disponivel",
-                    img: "joia16.jpeg" },
-                { numero: "17", categoria: "brinco", nome: "Brinco de Madeira", preco: 30, status: "disponivel",
-                    img: "joia17.jpeg" }
-            ];
-
-            const check = await db.collection("joias").limit(1).get();
-            if (check.empty) {
-                for (let joia of dadosIniciais) {
-                    await db.collection("joias").add(joia);
-                }
-            }
-            carregarJoias();
-        }
-
-        // ==================== ADMIN ====================
-        function logar() {
-            const s = document.getElementById("senha").value;
-            if (s === SENHA_ADMIN) {
-                adminLogado = true;
-                document.getElementById("loginBox").style.display = "none";
-                document.getElementById("adminBox").style.display = "block";
-                atualizarResumoAdmin();
-                renderizar();
-                alert("✅ Modo administrador ativado!");
-            } else {
-                alert("❌ Senha incorreta!");
-            }
-        }
-
-        function sairAdmin() {
-            adminLogado = false;
-            document.getElementById("loginBox").style.display = "block";
-            document.getElementById("adminBox").style.display = "none";
-            document.getElementById("senha").value = "";
+// Carregar dados do Firebase
+async function carregarJoias() {
+    document.getElementById("products").innerHTML = '<div class="loading">🔄 Carregando suas jóias...</div>';
+    
+    try {
+        const snapshot = await db.collection("joias").orderBy("numero").get();
+        joias = [];
+        snapshot.forEach(doc => {
+            joias.push({ id: doc.id, ...doc.data() });
+        });
+        
+        // 🔧 Só carrega dados iniciais se o banco estiver vazio E ainda não tiver carregado
+        if(joias.length === 0 && !dadosIniciaisCarregados) {
+            dadosIniciaisCarregados = true;
+            await carregarDadosIniciais();
+        } else {
             renderizar();
+            if(adminLogado) atualizarResumoAdmin();
         }
+    } catch(error) {
+        console.error("Erro:", error);
+        document.getElementById("products").innerHTML = '<div class="loading">❌ Erro ao carregar. Recarregue a página.</div>';
+    }
+}
 
-        function atualizarResumoAdmin() {
-            const total = joias.length;
-            const disp = joias.filter(j => j.status !== "vendido").length;
-            const vend = joias.filter(j => j.status === "vendido").length;
-            document.getElementById("resumo").innerHTML =
-                `📊 <strong>Total:</strong> ${total} &nbsp;·&nbsp; ✨ <strong>Disponíveis:</strong> ${disp} &nbsp;·&nbsp; 💔 <strong>Vendidas:</strong> ${vend}`;
+// Dados iniciais (primeira execução)
+async function carregarDadosIniciais() {
+    const dadosIniciais = [
+        { numero: "1", categoria: "colar", nome: "Colar marchetaria de Madeira", preco: 50, status: "disponivel", img: "joia1.jpeg" },
+        { numero: "2", categoria: "colar", nome: "Colar de Madeira", preco: 45, status: "reservado", img: "joia2.jpeg" },
+        { numero: "3", categoria: "colar", nome: "Colar de Madeira", preco: 45, status: "reservado", img: "joia3.jpeg" },
+        { numero: "4", categoria: "colar", nome: "Colar de Madeira", preco: 55, status: "disponivel", img: "joia4.jpeg" },
+        { numero: "5", categoria: "colar", nome: "Colar de Madeira", preco: 50, status: "disponivel", img: "joia5.jpeg" },
+        { numero: "6", categoria: "colar", nome: "Colar de Madeira", preco: 40, status: "disponivel", img: "joia6.jpeg" },
+        { numero: "7", categoria: "brinco", nome: "Brinco de Madeira", preco: 50, status: "reservado", img: "joia7.jpeg" },
+        { numero: "8", categoria: "colar", nome: "Colar de Madeira", preco: 45, status: "disponivel", img: "joia8.jpeg" },
+        { numero: "10", categoria: "bracelete", nome: "Bracelete de Madeira", preco: 55, status: "reservado", img: "joia10.jpg" },
+        { numero: "11", categoria: "colar", nome: "Colar de Madeira", preco: 40, status: "disponivel", img: "joia11.jpg" },
+        { numero: "13", categoria: "colar", nome: "Colar de Madeira", preco: 40, status: "reservado", img: "joia13.jpg" },
+        { numero: "14", categoria: "colar", nome: "Colar de Madeira", preco: 35, status: "disponivel", img: "joia14.jpg" },
+        { numero: "15", categoria: "colar", nome: "Colar de Madeira", preco: 50, status: "disponivel", img: "joia15.jpeg" },
+        { numero: "16", categoria: "brinco", nome: "Brinco de Madeira", preco: 30, status: "disponivel", img: "joia16.jpeg" },
+        { numero: "17", categoria: "brinco", nome: "Brinco de Madeira", preco: 30, status: "disponivel", img: "joia17.jpeg" }
+    ];
+    
+    // 🔧 Verifica novamente se o banco está vazio antes de adicionar
+    const checkSnapshot = await db.collection("joias").limit(1).get();
+    if(checkSnapshot.empty) {
+        for(let joia of dadosIniciais) {
+            await db.collection("joias").add(joia);
         }
+    }
+    carregarJoias();
+}
 
-        // ==================== ADICIONAR PEÇA ====================
-        async function adicionarPeca() {
-            if (!adminLogado) { alert("Faça login primeiro"); return; }
+// Funções Admin
+function logar() {
+    let s = document.getElementById("senha").value;
+    if(s === SENHA_ADMIN) {
+        adminLogado = true;
+        document.getElementById("loginBox").style.display = "none";
+        document.getElementById("adminBox").style.display = "block";
+        atualizarResumoAdmin();
+        renderizar();
+        alert("✅ Modo administrador ativado!");
+    } else {
+        alert("❌ Senha incorreta!");
+    }
+}
 
-            const nome = document.getElementById("nome").value.trim();
-            const categoria = document.getElementById("categoria").value;
-            const preco = parseInt(document.getElementById("preco").value);
-            const img = document.getElementById("imagem").value.trim();
+function sairAdmin() {
+    adminLogado = false;
+    document.getElementById("loginBox").style.display = "block";
+    document.getElementById("adminBox").style.display = "none";
+    document.getElementById("senha").value = "";
+    renderizar();
+}
 
-            if (!nome) { alert("❌ Digite o nome da peça"); return; }
-            if (!preco || preco <= 0) { alert("❌ Digite um preço válido"); return; }
-            if (!img) { alert("❌ Digite o nome do arquivo da imagem"); return; }
+function atualizarResumoAdmin() {
+    let total = joias.length;
+    let disp = joias.filter(j => j.status !== "vendido").length;
+    let vend = joias.filter(j => j.status === "vendido").length;
+    document.getElementById("resumo").innerHTML = `📊 Total: ${total} | ✨ Disponíveis: ${disp} | 💔 Vendidas: ${vend}`;
+}
 
-            let maxNum = 0;
-            joias.forEach(j => { const n = parseInt(j.numero); if (n > maxNum) maxNum = n; });
-            const novoNumero = (maxNum + 1).toString();
+async function adicionarPeca() {
+    if(!adminLogado) { alert("Faça login primeiro"); return; }
+    
+    let nome = document.getElementById("nome").value.trim();
+    let categoria = document.getElementById("categoria").value;
+    let preco = parseInt(document.getElementById("preco").value);
+    let img = document.getElementById("imagem").value.trim();
+    
+    if(!nome) { alert("❌ Digite o nome da peça"); return; }
+    if(!preco || preco <= 0) { alert("❌ Digite um preço válido"); return; }
+    if(!img) { alert("❌ Digite o nome do arquivo da imagem"); return; }
+    
+    let maxNum = 0;
+    joias.forEach(j => { let n = parseInt(j.numero); if(n > maxNum) maxNum = n; });
+    let novoNumero = (maxNum + 1).toString();
+    
+    let novaPeca = {
+        numero: novoNumero,
+        categoria: categoria,
+        nome: nome,
+        preco: preco,
+        status: "disponivel",
+        img: img
+    };
+    
+    await db.collection("joias").add(novaPeca);
+    
+    document.getElementById("nome").value = "";
+    document.getElementById("preco").value = "";
+    document.getElementById("imagem").value = "";
+    
+    carregarJoias();
+    alert(`✅ Peça Nº ${novoNumero} adicionada com sucesso!`);
+}
 
-            const novaPeca = {
-                numero: novoNumero,
-                categoria,
-                nome,
-                preco,
-                status: "disponivel",
-                img
-            };
-
-            await db.collection("joias").add(novaPeca);
-
-            document.getElementById("nome").value = "";
-            document.getElementById("preco").value = "";
-            document.getElementById("imagem").value = "";
-
-            carregarJoias();
-            alert(`✅ Peça Nº ${novoNumero} adicionada com sucesso!`);
-        }
-
-        // ==================== MARCAR / RESTAURAR ====================
-        async function marcarVendida(id) {
-            if (!adminLogado) { alert("🔒 Acesso restrito"); return; }
-            if (confirm("✅ Confirmar venda desta peça?")) {
-                await db.collection("joias").doc(id).update({ status: "vendido" });
-                carregarJoias();
-                alert("✨ Peça marcada como VENDIDA!");
-            }
-        }
-
-        async function restaurarVenda(id) {
-            if (!adminLogado) { alert("🔒 Acesso restrito"); return; }
-            if (confirm("♻️ Restaurar esta peça?")) {
-                await db.collection("joias").doc(id).update({ status: "disponivel" });
-                carregarJoias();
-                alert("🔄 Peça restaurada para DISPONÍVEL!");
-            }
-        }
-
-        // ==================== RENDERIZAR ====================
-        function renderizar() {
-            const container = document.getElementById("products");
-            container.innerHTML = "";
-
-            let lista = [];
-            if (filtroAtual === "disponiveis") lista = joias.filter(j => j.status !== "vendido");
-            else if (filtroAtual === "vendidas") lista = joias.filter(j => j.status === "vendido");
-            else if (filtroAtual === "brinco") lista = joias.filter(j => j.categoria === "brinco" && j.status !== "vendido");
-            else if (filtroAtual === "colar") lista = joias.filter(j => j.categoria === "colar" && j.status !== "vendido");
-            else if (filtroAtual === "bracelete") lista = joias.filter(j => j.categoria === "bracelete" && j.status !==
-                "vendido");
-
-            lista.sort((a, b) => parseInt(a.numero) - parseInt(b.numero));
-
-            if (lista.length === 0) {
-                container.innerHTML =
-                    `<div class="loading" style="grid-column:1/-1;">✦ Nenhuma peça encontrada ✦</div>`;
-                return;
-            }
-
-            for (const joia of lista) {
-                const card = document.createElement("div");
-                card.className = "card";
-                if (joia.status === "vendido") card.classList.add("vendido-card");
-
-                const statusClass = joia.status === "disponivel" ? "disponivel" :
-                    (joia.status === "reservado" ? "reservado" : "vendido");
-                const statusText = joia.status === "disponivel" ? "Disponível" :
-                    (joia.status === "reservado" ? "Reservado" : "Vendido");
-
-                let botoesAdmin = "";
-                if (adminLogado) {
-                    if (joia.status !== "vendido") {
-                        botoesAdmin = `
-                            <div class="admin-buttons">
-                                <button class="btn-vender" onclick="marcarVendida('${joia.id}')">🔨 Vender</button>
-                            </div>
-                        `;
-                    } else {
-                        botoesAdmin = `
-                            <div class="admin-buttons">
-                                <button class="btn-restaurar" onclick="restaurarVenda('${joia.id}')">↩️ Restaurar</button>
-                            </div>
-                        `;
-                    }
-                }
-
-                const imagemHtml = joia.img ?
-                    `<img src="${joia.img}" onclick="abrirZoom(this.src)" onerror="this.src='https://placehold.co/400x400/f6f2eb/7a6d5e?text=Verdeleve'" />` :
-                    `<img src="https://placehold.co/400x400/f6f2eb/7a6d5e?text=Verdeleve" onclick="abrirZoom(this.src)" />`;
-
-                card.innerHTML = `
-                    ${imagemHtml}
-                    <span class="numero-badge">Nº ${joia.numero}</span>
-                    <div class="info">
-                        <span class="status ${statusClass}">${statusText}</span>
-                        <div class="product-name">${joia.nome}</div>
-                        <div class="price">${joia.preco}</div>
-                        ${joia.status !== "vendido" 
-                            ? `<button class="btn-whats" onclick="comprar(${joia.numero})">💬 Tenho interesse</button>` 
-                            : `<div class="sold-label">🔒 Peça já comercializada</div>`
-                        }
-                        ${botoesAdmin}
-                    </div>
-                `;
-
-                container.appendChild(card);
-            }
-        }
-
-        // ==================== FILTROS ====================
-        function filtrar(tipo, btn) {
-            filtroAtual = tipo;
-            document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
-            btn.classList.add("active");
-            renderizar();
-        }
-
-        // ==================== COMPRAR / ZOOM ====================
-        function comprar(numero) {
-            window.open(`https://wa.me/5511963429803?text=Olá, tenho interesse na joia número ${numero}`);
-        }
-
-        function abrirZoom(src) {
-            document.getElementById("zoomImg").src = src;
-            document.getElementById("zoom").style.display = "flex";
-            document.body.style.overflow = "hidden";
-        }
-
-        function fecharZoom() {
-            document.getElementById("zoom").style.display = "none";
-            document.body.style.overflow = "";
-        }
-
-        // ==================== INICIALIZAR ====================
+async function marcarVendida(id) {
+    if(!adminLogado) { alert("🔒 Acesso restrito"); return; }
+    if(confirm("✅ Confirmar venda desta peça?")) {
+        await db.collection("joias").doc(id).update({ status: "vendido" });
         carregarJoias();
+        alert("✨ Peça marcada como VENDIDA!");
+    }
+}
 
-        document.getElementById("btnAdmin").onclick = function() {
-            document.getElementById("adminPanel").classList.toggle("show");
-        };
-    </script>
+async function restaurarVenda(id) {
+    if(!adminLogado) { alert("🔒 Acesso restrito"); return; }
+    if(confirm("♻️ Restaurar esta peça?")) {
+        await db.collection("joias").doc(id).update({ status: "disponivel" });
+        carregarJoias();
+        alert("🔄 Peça restaurada para DISPONÍVEL!");
+    }
+}
+
+// Renderizar
+function renderizar() {
+    let container = document.getElementById("products");
+    container.innerHTML = "";
+    
+    let lista = [];
+    if(filtroAtual === "disponiveis") lista = joias.filter(j => j.status !== "vendido");
+    else if(filtroAtual === "vendidas") lista = joias.filter(j => j.status === "vendido");
+    else if(filtroAtual === "brinco") lista = joias.filter(j => j.categoria === "brinco" && j.status !== "vendido");
+    else if(filtroAtual === "colar") lista = joias.filter(j => j.categoria === "colar" && j.status !== "vendido");
+    else if(filtroAtual === "bracelete") lista = joias.filter(j => j.categoria === "bracelete" && j.status !== "vendido");
+    
+    lista.sort((a,b) => parseInt(a.numero) - parseInt(b.numero));
+    
+    if(lista.length === 0) {
+        container.innerHTML = "<div style='text-align:center;padding:50px'>✨ Nenhuma peça encontrada</div>";
+        return;
+    }
+    
+    for(let joia of lista) {
+        let card = document.createElement("div");
+        card.className = "card";
+        if(joia.status === "vendido") card.style.opacity = "0.7";
+        
+        let statusClass = joia.status === "disponivel" ? "disponivel" : (joia.status === "reservado" ? "reservado" : "vendido");
+        let statusText = joia.status === "disponivel" ? "Disponível" : (joia.status === "reservado" ? "Reservado" : "Vendido");
+        
+        let botoesAdmin = "";
+        if(adminLogado) {
+            if(joia.status !== "vendido") {
+                botoesAdmin = `<div style="margin-top:10px"><button class="btn-vender" onclick="marcarVendida('${joia.id}')">🔨 Marcar como vendida</button></div>`;
+            } else {
+                botoesAdmin = `<div style="margin-top:10px"><button class="btn-restaurar" onclick="restaurarVenda('${joia.id}')">↩️ Restaurar para disponível</button></div>`;
+            }
+        }
+        
+        card.innerHTML = `
+            <img src="${joia.img}" onclick="abrirZoom(this.src)" onerror="this.src='https://placehold.co/400x400?text=Imagem+não+encontrada'">
+            <div>
+                <span class="status ${statusClass}">${statusText}</span>
+                <div style="font-weight:bold; margin:5px 0">${joia.nome}</div>
+                <div class="price">R$ ${joia.preco}</div>
+                ${joia.status !== "vendido" ? `<button class="btn-whats" onclick="comprar(${joia.numero})">💬 Tenho interesse - WhatsApp</button>` : '<div style="font-size:12px;color:#999;margin-top:8px">🔒 Peça já comercializada</div>'}
+                ${botoesAdmin}
+            </div>
+        `;
+        container.appendChild(card);
+    }
+}
+
+function filtrar(tipo, btn) {
+    filtroAtual = tipo;
+    let botoes = document.querySelectorAll(".tab-btn");
+    botoes.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderizar();
+}
+
+function comprar(numero) {
+    window.open(`https://wa.me/5511963429803?text=Olá, tenho interesse na joia número ${numero}`);
+}
+
+function abrirZoom(src) {
+    document.getElementById("zoomImg").src = src;
+    document.getElementById("zoom").style.display = "flex";
+}
+
+function fecharZoom() {
+    document.getElementById("zoom").style.display = "none";
+}
+
+// Inicializar
+carregarJoias();
+
+document.getElementById("btnAdmin").onclick = function() {
+    document.getElementById("adminPanel").classList.toggle("show");
+};
+</script>
+
 </body>
 </html>
